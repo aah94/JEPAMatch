@@ -15,7 +15,4 @@ Official Code the paper
 Python >= 3.6, PyTorch == 1.x, torchvision == x.x.x
 
 
-
 # Citation
-
-
