@@ -13,6 +13,11 @@ Code accompanying the paper
 
 [Brief description of your project/algorithm, similar to DARTS]. For example: This algorithm is based on continuous relaxation and gradient descent. It is able to efficiently design high-performance architectures for image classification (on Dataset A) and recurrent architectures for language modeling (on Dataset B). Only a single GPU is required.
 
-## Requirements
-```text
+# Requirements
 Python >= 3.6, PyTorch == 1.x, torchvision == x.x.x
+
+
+
+# Citation
+
+
