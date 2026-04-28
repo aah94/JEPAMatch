@@ -1,7 +1,3 @@
-# JEPAMatch
-Geometric Representation Shaping for Semi-Supervised Learning 
-
-
 # Geometric Representation Shaping for Semi-Supervised Learning
 
 Official Code the paper 
