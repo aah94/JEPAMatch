@@ -2,12 +2,10 @@
 Geometric Representation Shaping for Semi-Supervised Learning 
 
 
-# [Your Project Name]
+# Geometric Representation Shaping for Semi-Supervised Learning
 
-Code accompanying the paper 
-[**Title of Your Paper**](https://arxiv.org/abs/xxxx.xxxxx)  
-[Author 1], [Author 2], [Author 3].  
-*Conference/Journal Name or arXiv:xxxx.xxxxx*. 
+Official Code the paper 
+[JEPAMatch: Geometric Representation Shaping for Semi-Supervised Learning](https://arxiv.org/abs/2604.21046)  
 
 ![Alt text for your header image or gif](url-to-your-header-image-or-gif)
 
