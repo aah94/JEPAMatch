@@ -190,6 +190,7 @@ Beyond the standard USB training config (optimizer, schedule, backbone, ...), JE
 # Representation Level hyperparameters
 beta: 0.2                # SIGReg balance within the representation loss
 lambda_rep: 0.5           # representation loss weight in the total loss
+repulsion_coef: 1000      # extra weight on the repulsion term (see note below)
 warmup_ratio: 0.25        # fraction of training spent in the SIGReg warmup phase (T_warm / T)
 centroid_mean: local      # JEPA prediction target: "local" (K local crops) or "global" (weak+strong)
 sigreg_views: local       # SIGReg scope: "local" crops only, or "all" views (weak+strong+local)
@@ -207,6 +208,15 @@ to every view (closer to vanilla LeJEPA), and `weak_strong_source`/`global_sourc
 loader only, see [`semilearn/datasets/cv_datasets/cifar.py`](semilearn/datasets/cv_datasets/cifar.py))
 let you swap the weak/strong augmentation recipe or fully decouple the representation loss's
 "global" views from the ones used for pseudo-labeling.
+
+**Note on `repulsion_coef`.** The paper's total-loss equation writes the repulsion term with an
+implicit coefficient of 1.0. In this codebase it defaults to `1000`: the raw repulsion loss
+(a mean of `relu(cosine similarity)^2` between class-mean pairs) is numerically tiny relative to
+the prediction and SIGReg terms it's added to, so at coefficient 1.0 it has negligible effect on
+class-mean separation. Every checkpoint behind the reported results was trained with this 1000x
+scaling; it is disclosed here rather than silently baked into the paper's equation. Set
+`repulsion_coef: 1.0` to reproduce the paper's written formula exactly, at the cost of weaker
+active repulsion between class means.
 
 ## Repository structure
 

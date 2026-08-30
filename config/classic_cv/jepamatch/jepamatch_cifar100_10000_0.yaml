@@ -49,6 +49,7 @@ gpu: None
 # JEPAMatch-specific (paper Sec. 4/5): Representation Level hyperparameters.
 beta: 0.2               # SIGReg balance within the representation loss
 lambda_rep: 0.5         # representation loss weight in the total loss
+repulsion_coef: 1000    # extra weight on the repulsion term; paper equation shows no explicit coefficient (implicitly 1.0), but published results used this 1000x scaling -- see README
 warmup_ratio: 0.25      # fraction of training spent in the SIGReg warmup phase (paper calls this T_warm / T)
 centroid_mean: local    # JEPA prediction-loss target: "local" = mean of the K local crops; "global" = mean of the global (weak + strong) views
 sigreg_views: local     # views (Adaptive Class-wise) SIGReg regularizes: "local" = local crops only; "all" = weak + strong + local (the paper's 3 view types)

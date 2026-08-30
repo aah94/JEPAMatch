@@ -45,8 +45,18 @@ class JEPAMatch(AlgorithmBase):
 
     Args (beyond FlexMatch's T / p_cutoff / hard_label / thresh_warmup):
         - beta (`float`): SIGReg balance within the representation loss.
-            L_rep = (1 - beta) * L_pred + beta * L_SIGReg [+ L_repulsion in the main phase]
+            L_rep = (1 - beta) * L_pred + beta * L_SIGReg [+ repulsion_coef * L_repulsion in the main phase]
         - lambda_rep (`float`): weight of the representation loss in the total loss.
+        - repulsion_coef (`float`, default 1000.0): multiplier on the repulsion term.
+            IMPLEMENTATION NOTE (paper discrepancy, disclosed here rather than hidden): the
+            paper's L_repulsion equation carries no explicit weight, but the code that produced
+            every reported result always multiplied it by 1000 -- L_repulsion is a bounded,
+            relu-gated cosine-similarity quantity (naturally ~1e-5 after relu zeroes ~95% of
+            pairs and squaring crushes the rest), while L_pred and L_SIGReg are extensive in
+            feature dimension and batch size respectively (naturally ~0.3-2.5). Without this
+            weight, repulsion is numerically inert; 1000 is the default so this code reproduces
+            the paper's tables out of the box. See semilearn/nets/jepa_modules.py for the
+            underlying AdaptiveSIGReg.forward.
         - warmup_ratio (`float`): fraction of total training iterations spent in the
             SIGReg warmup phase before class-wise shaping begins (paper's T_warm / T).
         - centroid_mean (`str`, "local" | "global"): which views' average is the JEPA
@@ -74,10 +84,11 @@ class JEPAMatch(AlgorithmBase):
             hard_label=args.hard_label,
             centroid_mean=args.centroid_mean,
             sigreg_views=args.sigreg_views,
+            repulsion_coef=args.repulsion_coef,
         )
 
     def init(self, T, p_cutoff, beta, lambda_rep, warmup_ratio=0.25,
-             hard_label=True, centroid_mean="local", sigreg_views="local"):
+             hard_label=True, centroid_mean="local", sigreg_views="local", repulsion_coef=1000.0):
         assert centroid_mean in self.CENTROID_MEAN_CHOICES, \
             f"centroid_mean must be one of {self.CENTROID_MEAN_CHOICES}, got {centroid_mean!r}"
         assert sigreg_views in self.SIGREG_VIEWS_CHOICES, \
@@ -90,6 +101,7 @@ class JEPAMatch(AlgorithmBase):
         self.use_hard_label = hard_label
         self.centroid_mean = centroid_mean
         self.sigreg_views = sigreg_views
+        self.repulsion_coef = repulsion_coef
         self.last_train_info = None
 
     def set_hooks(self):
@@ -203,7 +215,7 @@ class JEPAMatch(AlgorithmBase):
             pred_loss, sigreg_loss, repulsion_loss, alpha = self._representation_loss(
                 x_ulb_l, proj_weak, proj_strong, proj_x_lb, pseudo_label, mask, y_lb, x_ulb_g=x_ulb_g)
 
-            rep_loss = (1.0 - self.beta) * pred_loss + self.beta * sigreg_loss + repulsion_loss
+            rep_loss = (1.0 - self.beta) * pred_loss + self.beta * sigreg_loss + self.repulsion_coef * repulsion_loss
             total_loss = sup_loss + self.lambda_u * unsup_loss + self.lambda_rep * rep_loss
 
             # Pseudo-labeling diagnostics (utilization / accuracy / class-count imbalance).
@@ -268,5 +280,12 @@ class JEPAMatch(AlgorithmBase):
             SSL_Argument("--sigreg_views", str, "local",
                          "views (Adaptive Class-wise) SIGReg regularizes: 'local' = local crops only; "
                          "'all' = weak + strong + local (the paper's 3 view types)"),
+            SSL_Argument("--repulsion_coef", float, 1000.0,
+                         "extra weight on the repulsion loss within the representation loss. "
+                         "The paper's total-loss equation shows no explicit coefficient here (implicitly 1.0), "
+                         "but the checkpoints behind every reported result were trained with this term scaled by "
+                         "1000x -- the repulsion loss is otherwise numerically tiny relative to L_pred/L_sigreg "
+                         "and has negligible effect on class-mean separation. Set to 1.0 to match the paper's "
+                         "written equation exactly (weaker repulsion, less separated class means)."),
             SSL_Argument("--save_train_info", str2bool, False, "periodically dump per-step pseudo-labeling diagnostics (used for paper figures)"),
         ]
